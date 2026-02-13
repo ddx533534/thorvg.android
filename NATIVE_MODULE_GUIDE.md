@@ -4,6 +4,85 @@
 
 为了解决 OpenMP 冲突问题并简化 C++ 代码管理，我们创建了一个统一的 `native` 模块，将所有 C++ 代码编译到一个共享库 `libthorvg-native.so` 中。
 
+## ThorVG 依赖说明
+
+### 依赖的 ThorVG 版本
+
+本项目依赖 ThorVG 的特定 commit：
+
+```
+Repository: https://github.com/thorvg/thorvg.git
+Commit: e15069de7afcc5e853edf1561e69d9b8383e2c6c
+Version: ~1.0.0
+```
+
+### 为什么依赖特定 commit？
+
+- **API 稳定性**: ThorVG 1.0.0 的 API 与之前版本有较大变化（使用 `std::unique_ptr`）
+- **功能支持**: 该版本完整支持 SVG 和 Lottie 加载器
+- **已验证**: 该 commit 已经过充分测试，确保兼容性
+
+### 获取 ThorVG 源码
+
+在项目根目录（`thorvg.android/`）下执行：
+
+```bash
+# 方法 1: 克隆整个仓库并切换到指定 commit
+git clone https://github.com/thorvg/thorvg.git
+cd thorvg
+git checkout e15069de7afcc5e853edf1561e69d9b8383e2c6c
+cd ..
+
+# 方法 2: 作为 submodule 添加（推荐）
+git submodule add https://github.com/thorvg/thorvg.git thorvg
+cd thorvg
+git checkout e15069de7afcc5e853edf1561e69d9b8383e2c6c
+cd ..
+git add thorvg
+git commit -m "Add thorvg submodule at commit e15069de"
+
+# 方法 3: 如果已经是 submodule，初始化并更新
+git submodule update --init --recursive
+cd thorvg
+git checkout e15069de7afcc5e853edf1561e69d9b8383e2c6c
+cd ..
+```
+
+### 目录结构要求
+
+ThorVG 必须位于项目根目录下：
+
+```
+thorvg.android/
+├── thorvg/                    # ThorVG 源码目录（必需）
+│   ├── src/                   # ThorVG 源代码
+│   ├── inc/                   # ThorVG 头文件
+│   ├── cross/                 # 交叉编译配置
+│   ├── lib/                   # 构建后的静态库（生成）
+│   │   ├── arm64-v8a/
+│   │   │   └── libthorvg.a
+│   │   └── x86_64/
+│   │       └── libthorvg.a
+│   └── meson.build
+├── native/
+├── lottie/
+├── svg/
+└── sample/
+```
+
+### ThorVG 的构建配置
+
+ThorVG 需要使用 Meson 构建系统编译，配置要求：
+
+```bash
+meson setup build \
+  -Dloaders="svg, lottie" \    # 启用 SVG 和 Lottie 加载器
+  --cross-file /tmp/android_cross.txt \  # Android 交叉编译配置
+  -Ddefault_library=static      # 构建静态库
+```
+
+详细构建步骤见下文"构建流程"部分。
+
 ## 架构设计
 
 ```
@@ -30,6 +109,35 @@
 │  - 链接 libthorvg.a                                    │
 │  - 静态链接 OpenMP (-static-openmp)                     │
 └───────────────────────────────────���─────────────────────┘
+```
+
+### ThorVG 依赖层次
+
+Native 模块链接 ThorVG 静态库：
+
+```
+Native Module (libthorvg-native.so)
+  ↓ 静态链接
+ThorVG Library (libthorvg.a)
+  ├─ 来源: thorvg/ 目录（项目根目录下）
+  ├─ Commit: e15069de7afcc5e853edf1561e69d9b8383e2c6c
+  ├─ 构建工具: Meson + Ninja
+  ├─ 渲染引擎: SwCanvas (软件渲染)
+  └─ 支持格式: SVG, Lottie
+```
+
+完整依赖链路：
+
+```
+App (sample.apk)
+  ↓ 依赖
+Lottie/SVG Module (.aar)
+  ↓ 依赖
+Native Module (libthorvg-native.so)
+  ↓ 静态链接
+ThorVG Library (libthorvg.a)
+  ↓ 链接
+NDK Runtime (libc++_static.a, OpenMP)
 ```
 
 ## 模块职责
@@ -74,7 +182,38 @@ sample
 
 ## 构建流程
 
+### 0. 准备 ThorVG 源码（首次构建必需）
+
+**重要**: 必须先获取 ThorVG 源码并切换到指定 commit，否则构建会失败。
+
+```bash
+# 在项目根目录（thorvg.android/）执行
+
+# 如果 thorvg 目录不存在，克隆仓库
+git clone https://github.com/thorvg/thorvg.git
+
+# 进入 thorvg 目录
+cd thorvg
+
+# 切换到指定 commit（必需）
+git checkout e15069de7afcc5e853edf1561e69d9b8383e2c6c
+
+# 返回项目根目录
+cd ..
+```
+
+**验证**: 确保 `thorvg/` 目录存在且包含以下文件：
+- `thorvg/meson.build`
+- `thorvg/src/`
+- `thorvg/inc/`
+- `thorvg/cross/`
+
 ### 1. 构建 ThorVG 静态库
+
+**前提条件**:
+- 已完成步骤 0（获取 ThorVG 源码）
+- 已安装 Meson 构建系统：`brew install meson`（macOS）
+- Android NDK 已配置
 
 ```bash
 # 为 arm64-v8a 构建
@@ -85,6 +224,10 @@ sample
 ./gradlew native:setupCrossBuild -Pabi=3
 ./build_libthorvg.sh
 ```
+
+**说明**:
+- `setupCrossBuild` 生成交叉编译配置文件 `/tmp/android_cross.txt`
+- `build_libthorvg.sh` 使用 Meson 编译 ThorVG，启用 SVG 和 Lottie 加载器
 
 这会生成：
 - `thorvg/lib/arm64-v8a/libthorvg.a`

@@ -13,35 +13,56 @@ It simplifies integration with a script that builds ThorVG for Android system(ar
 
 ## Preparation
 
-Please ensure that you have installed the [Android SDK](https://developer.android.com/studio), also your development environment is configured to build ThorVG Android
+Please ensure that you have installed the [Android SDK](https://developer.android.com/studio) and [Meson build system](https://mesonbuild.com/Getting-meson.html).
+
+```bash
+# Clone this project
+git clone https://github.com/ddx533534/thorvg.android.git
+cd thorvg.android
+
+# Clone ThorVG dependency (required)
+git clone https://github.com/thorvg/thorvg.git
+cd thorvg
+git checkout e15069de7afcc5e853edf1561e69d9b8383e2c6c
+cd ..
 ```
-$git clone https://github.com/thorvg/thorvg.android.git
-$cd thorvg.android
-$git submodule update --init --recursive
-```
+
+**Important**: This project depends on ThorVG at specific commit `e15069de7afcc5e853edf1561e69d9b8383e2c6c`. The `thorvg/` directory must exist in the project root before building.
+
 Please refer to [ThorVG](https://github.com/thorvg/thorvg) for detailed information on setting up the ThorVG build environment.
+
+For detailed architecture and build instructions, see:
+- [QUICK_START.md](QUICK_START.md) - Quick start guide for new developers
+- [NATIVE_MODULE_GUIDE.md](NATIVE_MODULE_GUIDE.md) - Detailed architecture documentation
 <br />
 
-## ThorVG Cross-Build 
+## ThorVG Cross-Build
 
 Follow these steps to cross-build ThorVG Android library.
 
-Prepare for cross-building by executing the lottie:setupCrossBuild task.
-To build for arm64, use 1 as the value for 'abi'. For x86_64, use 2.
-```
-gradle lottie:setupCrossBuild -Pabi=1
-```
+### Build for ARM64 (arm64-v8a)
 
-Execute build_libthorvg.sh script to perform cross-building.
-```
+```bash
+# 1. Generate cross-compilation config (use abi=1 for arm64-v8a)
+./gradlew native:setupCrossBuild -Pabi=1
+
+# 2. Build ThorVG static library
 ./build_libthorvg.sh
-```
-
-Copy the generated **libthorvg.a** to the thorvg/lib directory using the copy_libthorvg.sh script.
-If the first argument is 1, the library will be copied to the thorvg/lib/arm64-v8a/ directory. If it is 2, it will be copied to the thorvg/lib/x86_64/ directory.
-```
 ./copy_libthorvg.sh 1
 ```
+
+### Build for x86_64 (Emulator)
+
+```bash
+# 1. Generate cross-compilation config (use abi=3 for x86_64)
+./gradlew native:setupCrossBuild -Pabi=2
+
+# 2. Build ThorVG static library
+./build_libthorvg.sh
+./copy_libthorvg.sh 2
+```
+
+The generated `libthorvg.a` will be automatically placed in `thorvg/lib/{ABI}/` directory.
 
 ## ThorVG-Android Build
 

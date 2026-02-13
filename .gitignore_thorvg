@@ -1,0 +1,42 @@
+# ThorVG 相关的 gitignore 配置
+
+# ThorVG 源码目录（如果使用 git clone 而非 submodule）
+# 注意：如果使用 submodule，请注释掉这一行
+/thorvg/
+
+# ThorVG 构建产物
+thorvg/build/
+thorvg/lib/
+
+# 交叉编译配置文件
+/tmp/android_cross.txt
+
+# Android 构建产物
+*.iml
+.gradle
+/local.properties
+/.idea/
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+*.apk
+*.ap_
+*.aab
+
+# NDK
+obj/
+libs/
+
+# Log Files
+*.log
+
+# Android Studio
+*.iml
+.gradle/
+local.properties
+.idea/
+
+# Gradle wrapper
+!gradle-wrapper.jar
