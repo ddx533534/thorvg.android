@@ -14,6 +14,7 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "thorvg-android"
-//include ':lottie'
+include ':native'
+include ':lottie'
 include ':svg'
 include ':sample'

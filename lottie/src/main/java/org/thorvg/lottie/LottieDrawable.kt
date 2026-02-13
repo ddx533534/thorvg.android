@@ -542,7 +542,8 @@ class LottieDrawable internal constructor() : Drawable(), Animatable {
         const val REVERSE = 2
 
         init {
-            System.loadLibrary("lottie-libs")
+            // Load unified native library that contains both SVG and Lottie support
+            System.loadLibrary("thorvg-native")
         }
 
         @JvmStatic

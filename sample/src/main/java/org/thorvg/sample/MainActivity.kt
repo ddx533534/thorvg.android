@@ -27,25 +27,25 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.TextView
-//import org.thorvg.lottie.LottieAnimationView
+import org.thorvg.lottie.LottieAnimationView
 
 class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-//        val lottieView = findViewById<LottieAnimationView>(R.id.lottie_view)
-//
-//        findViewById<View>(R.id.anim_state).setOnClickListener { v: View ->
-//            val button = v as TextView
-//            if ("Pause".contentEquals(button.text)) {
-//                lottieView.pauseAnimation()
-//                button.text = "Resume"
-//            } else {
-//                lottieView.resumeAnimation()
-//                button.text = "Pause"
-//            }
-//        }
+        val lottieView = findViewById<LottieAnimationView>(R.id.lottie_view)
+
+        findViewById<View>(R.id.anim_state).setOnClickListener { v: View ->
+            val button = v as TextView
+            if ("Pause".contentEquals(button.text)) {
+                lottieView.pauseAnimation()
+                button.text = "Resume"
+            } else {
+                lottieView.resumeAnimation()
+                button.text = "Pause"
+            }
+        }
 
         // Add button to open SVG sample activity
         findViewById<View>(R.id.svg_sample_button)?.setOnClickListener {

@@ -1,0 +1,86 @@
+plugins {
+    alias(libs.plugins.android.library)
+}
+
+android {
+    compileSdk libs.versions.compileSdk.get().toInteger()
+    ndkVersion libs.versions.ndkVersion.get()
+
+    defaultConfig {
+        minSdk libs.versions.minSdk.get().toInteger()
+
+        externalNativeBuild {
+            cmake {
+                arguments '-DANDROID_STL=c++_static'
+                abiFilters 'arm64-v8a', 'x86_64'
+            }
+        }
+    }
+
+    buildTypes {
+        debug {
+            minifyEnabled false
+        }
+        release {
+            minifyEnabled false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    externalNativeBuild {
+        cmake {
+            path 'src/main/cpp/CMakeLists.txt'
+        }
+    }
+
+    namespace 'org.thorvg.native_'
+}
+
+tasks.register('setupCrossBuild') {
+    inputs.property("abi", "null")
+
+    doLast {
+        def inputFileName
+        def abi = project.hasProperty('abi') ? project.getProperty('abi') : "null"
+        switch (abi) {
+            case "1": // arm64-v8a
+                inputFileName = "android_aarch64"
+                break
+            case "3": // x86_64
+                inputFileName = "android_x86_64"
+                break
+            default:
+                println "Invalid argument: abi type is '${abi}'. Please provide '1' or '3'." +
+                        "\n - 1: arm64-v8a" +
+                        "\n - 3: x86_64"
+                return
+        }
+        println "Selected abi=${abi}"
+
+        def inputFile = new File('../thorvg/cross/' + inputFileName + '.txt')
+        def outputFile = new File('/tmp/android_cross.txt')
+
+        def androidConfig = android
+        def sdkPath = androidConfig.sdkDirectory.toPath().toString()
+        def ndkVersion = androidConfig.ndkVersion
+
+        def hostTag =
+                System.properties['os.name'].toLowerCase().contains('mac') ? 'darwin-x86_64' :
+                        System.properties['os.name'].toLowerCase().contains('linux') ? 'linux-x86_64' :
+                                'windows-x86_64'
+
+        def inputText = inputFile.text
+        def modifiedText = inputText
+                .replaceAll('NDK', "${sdkPath}/ndk/${ndkVersion}")
+                .replaceAll('HOST_TAG', hostTag)
+                .replaceAll('API', androidConfig.compileSdk.toString())
+
+        outputFile.write(modifiedText)
+
+        println "Cross build setup completed for native module."
+    }
+}

@@ -55,7 +55,8 @@ class SvgDrawable private constructor() : Drawable() {
         private const val TAG = "SvgDrawable"
 
         init {
-            System.loadLibrary("svg-libs")
+            // Load unified native library that contains both SVG and Lottie support
+            System.loadLibrary("thorvg-native")
         }
 
         /**

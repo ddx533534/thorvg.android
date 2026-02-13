@@ -22,11 +22,11 @@
         android:layout_marginBottom="16dp"
         android:text="SVG Samples" />
 
-    <!--    <org.thorvg.lottie.LottieAnimationView-->
-    <!--        android:id="@+id/lottie_view"-->
-    <!--        android:layout_width="200dp"-->
-    <!--        android:layout_height="200dp"-->
-    <!--        app:lottieDrawable="@drawable/lottie_swinging" />-->
+    <org.thorvg.lottie.LottieAnimationView
+        android:id="@+id/lottie_view"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        app:lottieDrawable="@drawable/lottie_swinging" />
 
     <org.thorvg.svg.SvgImageView
         android:layout_width="200dp"
