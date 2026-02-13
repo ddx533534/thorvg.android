@@ -20,36 +20,38 @@
  * SOFTWARE.
  */
 
-package org.thorvg.sample
+#ifndef THORVG_ANDROID_SVGDATA_H
+#define THORVG_ANDROID_SVGDATA_H
 
-import android.app.Activity
-import android.content.Intent
-import android.os.Bundle
-import android.view.View
-import android.widget.TextView
-//import org.thorvg.lottie.LottieAnimationView
+#include <thorvg.h>
+#include <cstdint>
+#include <memory>
 
-class MainActivity : Activity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+/**
+ * Encapsulates SVG data and ThorVG rendering context.
+ * Manages the lifecycle of Picture and Canvas objects.
+ */
+class SvgData {
+public:
+    std::unique_ptr<tvg::Picture> picture = nullptr;
+    std::unique_ptr<tvg::SwCanvas> canvas = nullptr;
+    uint32_t* buffer = nullptr;
+    uint32_t width = 0;
+    uint32_t height = 0;
 
-//        val lottieView = findViewById<LottieAnimationView>(R.id.lottie_view)
-//
-//        findViewById<View>(R.id.anim_state).setOnClickListener { v: View ->
-//            val button = v as TextView
-//            if ("Pause".contentEquals(button.text)) {
-//                lottieView.pauseAnimation()
-//                button.text = "Resume"
-//            } else {
-//                lottieView.resumeAnimation()
-//                button.text = "Pause"
-//            }
-//        }
+    SvgData() = default;
+    ~SvgData() = default;
 
-        // Add button to open SVG sample activity
-        findViewById<View>(R.id.svg_sample_button)?.setOnClickListener {
-            startActivity(Intent(this, SvgActivity::class.java))
-        }
-    }
-}
+    /**
+     * Sets the render buffer and size.
+     * Creates a new canvas and resizes the picture.
+     */
+    void setBufferSize(uint32_t* buf, float w, float h);
+
+    /**
+     * Renders the SVG to the buffer.
+     */
+    void draw();
+};
+
+#endif // THORVG_ANDROID_SVGDATA_H

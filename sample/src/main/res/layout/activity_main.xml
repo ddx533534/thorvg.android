@@ -12,20 +12,32 @@
         android:id="@+id/anim_state"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="8dp"
         android:text="Pause" />
 
-    <org.thorvg.lottie.LottieAnimationView
-        android:id="@+id/lottie_view"
-        android:layout_width="200dp"
-        android:layout_height="200dp"
-        app:lottieDrawable="@drawable/lottie_swinging" />
+    <Button
+        android:id="@+id/svg_sample_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:text="SVG Samples" />
 
-    <TextView
+    <!--    <org.thorvg.lottie.LottieAnimationView-->
+    <!--        android:id="@+id/lottie_view"-->
+    <!--        android:layout_width="200dp"-->
+    <!--        android:layout_height="200dp"-->
+    <!--        app:lottieDrawable="@drawable/lottie_swinging" />-->
+
+    <org.thorvg.svg.SvgImageView
         android:layout_width="200dp"
         android:layout_height="200dp"
-        android:gravity="center"
-        android:background="#ff0"
-        android:text="200x200" />
+        android:scaleType="fitXY"
+        app:svgRes="@raw/sample_big" />
+
+    <org.thorvg.svg.SvgImageView
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:scaleType="fitXY"
+        app:svgRes="@raw/sample_icon" />
 
 </LinearLayout>

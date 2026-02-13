@@ -1,0 +1,106 @@
+plugins {
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.android)
+}
+
+android {
+    compileSdk libs.versions.compileSdk.get().toInteger()
+    ndkVersion libs.versions.ndkVersion.get()
+
+    defaultConfig {
+        minSdk libs.versions.minSdk.get().toInteger()
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        externalNativeBuild {
+            cmake {
+                arguments '-DANDROID_STL=c++_static'
+            }
+        }
+    }
+
+    buildTypes {
+        debug {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'),
+                    'proguard-rules.pro'
+        }
+
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'),
+                    'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+
+    externalNativeBuild {
+        cmake {
+            path 'src/main/cpp/CMakeLists.txt'
+        }
+    }
+
+    namespace 'org.thorvg.svg'
+}
+
+dependencies {
+    implementation libs.androidx.annotation
+}
+
+tasks.register('setupCrossBuild') {
+    inputs.property("abi", "null")
+
+    doLast {
+        def inputFileName
+        def abi = project.hasProperty('abi') ? project.getProperty('abi') : "null"
+        switch (abi) {
+            case "1": // arm64-v8a
+                inputFileName = "android_aarch64"
+                break
+            case "2": // x86_64
+                inputFileName = "android_x86_64"
+                break
+            default:
+                println "Invalid argument: abi type is '${abi}'. Please provide either '1' or '2'." +
+                        "\n - 1: arm64-v8a" +
+                        "\n - 2: x86_64"
+                return
+        }
+        println "Selected abi=${abi} (${abi == "1" ? "arm64-v8a" : "x86_64"})"
+
+        def inputFile = new File('../thorvg/cross/' + inputFileName + '.txt')
+        def outputFile = new File('/tmp/android_cross.txt')
+
+        def androidConfig = android
+        def sdkPath = androidConfig.sdkDirectory.toPath().toString()
+        def ndkVersion = androidConfig.ndkVersion
+
+        // Determine the host tag based on the operating system
+        def hostTag =
+                System.properties['os.name'].toLowerCase().contains('mac') ? 'darwin-x86_64' :
+                        System.properties['os.name'].toLowerCase().contains('linux') ? 'linux-x86_64' :
+                                'windows-x86_64'
+
+        // Read the input file
+        def inputText = inputFile.text
+
+        // Replace placeholders with actual values in the input text
+        def modifiedText = inputText
+                .replaceAll('NDK', "${sdkPath}/ndk/${ndkVersion}")
+                .replaceAll('HOST_TAG', hostTag)
+                .replaceAll('API', androidConfig.compileSdk.toString())
+
+        // Write the modified text to the output file
+        outputFile.write(modifiedText)
+
+        println "Cross build setup is completed."
+    }
+}

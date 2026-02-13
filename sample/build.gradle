@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId "org.thorvg.sample"
-        minSdk libs.versions.targetSdk.get().toInteger()
+        minSdk libs.versions.minSdk.get().toInteger()
         targetSdk libs.versions.targetSdk.get().toInteger()
         versionCode 1
         versionName "1.0"
@@ -34,5 +34,6 @@ android {
 
 dependencies {
     implementation libs.androidx.core.ktx
-    implementation(project(":lottie"))
+//    implementation(project(":lottie"))
+    implementation(project(":svg"))
 }
