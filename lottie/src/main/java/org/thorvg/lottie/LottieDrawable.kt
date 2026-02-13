@@ -43,10 +43,10 @@ import androidx.annotation.IntDef
 import androidx.annotation.RawRes
 import androidx.annotation.RestrictTo
 import androidx.annotation.RestrictTo.Scope.LIBRARY_GROUP_PREFIX
-import org.thorvg.Lottie.nCreateLottie
-import org.thorvg.Lottie.nDestroyLottie
-import org.thorvg.Lottie.nDrawLottieFrame
-import org.thorvg.Lottie.nSetLottieBufferSize
+import org.thorvg.jni.Lottie.nCreateLottie
+import org.thorvg.jni.Lottie.nDestroyLottie
+import org.thorvg.jni.Lottie.nDrawLottieFrame
+import org.thorvg.jni.Lottie.nSetLottieBufferSize
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import java.io.BufferedReader

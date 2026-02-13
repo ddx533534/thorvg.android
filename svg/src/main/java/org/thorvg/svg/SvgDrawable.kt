@@ -30,11 +30,11 @@ import android.graphics.PixelFormat
 import android.graphics.drawable.Drawable
 import android.util.Log
 import androidx.annotation.RawRes
-import org.thorvg.Svg.nDestroySvg
-import org.thorvg.Svg.nDrawSvg
-import org.thorvg.Svg.nLoadSvgFromPath
-import org.thorvg.Svg.nLoadSvgFromString
-import org.thorvg.Svg.nSetSvgSize
+import org.thorvg.jni.Svg.nDestroySvg
+import org.thorvg.jni.Svg.nDrawSvg
+import org.thorvg.jni.Svg.nLoadSvgFromPath
+import org.thorvg.jni.Svg.nLoadSvgFromString
+import org.thorvg.jni.Svg.nSetSvgSize
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
