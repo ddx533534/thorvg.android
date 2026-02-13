@@ -30,6 +30,11 @@ import android.graphics.PixelFormat
 import android.graphics.drawable.Drawable
 import android.util.Log
 import androidx.annotation.RawRes
+import org.thorvg.Svg.nDestroySvg
+import org.thorvg.Svg.nDrawSvg
+import org.thorvg.Svg.nLoadSvgFromPath
+import org.thorvg.Svg.nLoadSvgFromString
+import org.thorvg.Svg.nSetSvgSize
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
@@ -125,21 +130,7 @@ class SvgDrawable private constructor() : Drawable() {
             return drawable
         }
 
-        // JNI methods
-        @JvmStatic
-        private external fun nLoadSvgFromPath(path: String, outSize: FloatArray): Long
 
-        @JvmStatic
-        private external fun nLoadSvgFromString(content: String, outSize: FloatArray): Long
-
-        @JvmStatic
-        private external fun nSetSvgSize(svgPtr: Long, bitmap: Bitmap?, width: Float, height: Float)
-
-        @JvmStatic
-        private external fun nDrawSvg(svgPtr: Long, bitmap: Bitmap)
-
-        @JvmStatic
-        private external fun nDestroySvg(svgPtr: Long)
     }
 
     override fun draw(canvas: Canvas) {
@@ -153,13 +144,17 @@ class SvgDrawable private constructor() : Drawable() {
             Log.w(TAG, "Invalid SVG size: ${intrinsicWidth}x${intrinsicHeight}")
             return
         }
-        Log.d(TAG,"image view bounds: ${bounds.width()} - ${bounds.height()}, svg bounds: $intrinsicWidth, $intrinsicHeight") ;
+        Log.d(
+            TAG,
+            "image view bounds: ${bounds.width()} - ${bounds.height()}, svg bounds: $intrinsicWidth, $intrinsicHeight"
+        );
 
         // Create or recreate bitmap using SVG's intrinsic size
         val currentBitmap = bitmap
         if (currentBitmap == null ||
             currentBitmap.width != intrinsicWidth ||
-            currentBitmap.height != intrinsicHeight) {
+            currentBitmap.height != intrinsicHeight
+        ) {
 
             currentBitmap?.recycle()
 

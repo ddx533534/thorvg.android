@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.4.1)
 
 # Configure import libs
 set(THORVG_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../thorvg)
-set(LOTTIE_CPP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../lottie/src/main/cpp)
-set(SVG_CPP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../svg/src/main/cpp)
+set(LOTTIE_CPP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lottie)
+set(SVG_CPP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/svg)
 
 if (${ANDROID_ABI} STREQUAL "arm64-v8a" OR ${ANDROID_ABI} STREQUAL "x86_64")
     # Import ThorVG static library
@@ -34,4 +34,4 @@ if (${ANDROID_ABI} STREQUAL "arm64-v8a" OR ${ANDROID_ABI} STREQUAL "x86_64")
             -fopenmp
             -static-openmp
             log)
-endif()
+endif ()

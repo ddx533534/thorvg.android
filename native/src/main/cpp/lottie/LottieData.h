@@ -25,7 +25,7 @@
 
 #include <cstdint>
 #include <iostream>
-#include "thorvg.h"
+#include "../../../../../thorvg/inc/thorvg.h"
 
 #define LOG_TAG "LottieDrawable"
 

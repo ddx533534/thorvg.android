@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.android)
 }
 
 android {
@@ -36,10 +37,15 @@ android {
             path 'src/main/cpp/CMakeLists.txt'
         }
     }
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
 
     namespace 'org.thorvg.native_'
 }
-
+dependencies {
+    implementation libs.androidx.annotation
+}
 tasks.register('setupCrossBuild') {
     inputs.property("abi", "null")
 

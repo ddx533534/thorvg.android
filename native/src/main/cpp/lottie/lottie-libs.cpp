@@ -28,17 +28,17 @@
 using namespace std;
 
 extern "C" jlong
-Java_org_thorvg_lottie_LottieDrawable_nCreateLottie(JNIEnv *env, jclass clazz,
-        jstring content, jint length, jintArray out_values) {
+Java_org_thorvg_Lottie_nCreateLottie(JNIEnv *env, jclass clazz,
+                                     jstring content, jint length, jintArray out_values) {
     if (tvg::Initializer::init(tvg::CanvasEngine::Sw, 3) != tvg::Result::Success) {
         return 0;
     }
 
-    const char* inputStr = env->GetStringUTFChars(content, nullptr);
-    auto* newData = new LottieDrawable::Data(inputStr, length);
+    const char *inputStr = env->GetStringUTFChars(content, nullptr);
+    auto *newData = new LottieDrawable::Data(inputStr, length);
     env->ReleaseStringUTFChars(content, inputStr);
 
-    jint* contentInfo = env->GetIntArrayElements(out_values, nullptr);
+    jint *contentInfo = env->GetIntArrayElements(out_values, nullptr);
     if (contentInfo != nullptr) {
         contentInfo[0] = (jint) newData->mAnimation->totalFrame();
         contentInfo[1] = (jint) newData->mAnimation->duration();
@@ -49,25 +49,26 @@ Java_org_thorvg_lottie_LottieDrawable_nCreateLottie(JNIEnv *env, jclass clazz,
 }
 
 extern "C" void
-Java_org_thorvg_lottie_LottieDrawable_nDestroyLottie(JNIEnv* env, jclass clazz, jlong lottie_ptr) {
+Java_org_thorvg_Lottie_nDestroyLottie(JNIEnv *env, jclass clazz, jlong lottie_ptr) {
     tvg::Initializer::term(tvg::CanvasEngine::Sw);
 
     if (lottie_ptr == 0) {
         return;
     }
 
-    auto* data = reinterpret_cast<LottieDrawable::Data*>(lottie_ptr);
+    auto *data = reinterpret_cast<LottieDrawable::Data *>(lottie_ptr);
     delete data;
 }
 
 extern "C" void
-Java_org_thorvg_lottie_LottieDrawable_nSetLottieBufferSize(JNIEnv* env, jclass clazz,
-        jlong lottie_ptr, jobject bitmap, jfloat width, jfloat height) {
+Java_org_thorvg_Lottie_nSetLottieBufferSize(JNIEnv *env, jclass clazz,
+                                            jlong lottie_ptr, jobject bitmap, jfloat width,
+                                            jfloat height) {
     if (lottie_ptr == 0) {
         return;
     }
 
-    auto* data = reinterpret_cast<LottieDrawable::Data*>(lottie_ptr);
+    auto *data = reinterpret_cast<LottieDrawable::Data *>(lottie_ptr);
     void *buffer;
     if (AndroidBitmap_lockPixels(env, bitmap, &buffer) >= 0) {
         data->setBufferSize((uint32_t *) buffer, width, height);
@@ -76,13 +77,13 @@ Java_org_thorvg_lottie_LottieDrawable_nSetLottieBufferSize(JNIEnv* env, jclass c
 }
 
 extern "C" void
-Java_org_thorvg_lottie_LottieDrawable_nDrawLottieFrame(JNIEnv* env, jclass clazz,
-        jlong lottie_ptr, jobject bitmap, jint frame) {
+Java_org_thorvg_Lottie_nDrawLottieFrame(JNIEnv *env, jclass clazz,
+                                        jlong lottie_ptr, jobject bitmap, jint frame) {
     if (lottie_ptr == 0) {
         return;
     }
 
-    auto* data = reinterpret_cast<LottieDrawable::Data*>(lottie_ptr);
+    auto *data = reinterpret_cast<LottieDrawable::Data *>(lottie_ptr);
     void *buffer;
     if (AndroidBitmap_lockPixels(env, bitmap, &buffer) >= 0) {
         data->draw(frame);

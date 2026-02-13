@@ -43,6 +43,10 @@ import androidx.annotation.IntDef
 import androidx.annotation.RawRes
 import androidx.annotation.RestrictTo
 import androidx.annotation.RestrictTo.Scope.LIBRARY_GROUP_PREFIX
+import org.thorvg.Lottie.nCreateLottie
+import org.thorvg.Lottie.nDestroyLottie
+import org.thorvg.Lottie.nDrawLottieFrame
+import org.thorvg.Lottie.nSetLottieBufferSize
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import java.io.BufferedReader
@@ -587,22 +591,5 @@ class LottieDrawable internal constructor() : Drawable(), Animatable {
                 throw IOException("Failed to read a lottie file.")
             }
         }
-
-        @JvmStatic
-        private external fun nCreateLottie(content: String, length: Int, outValues: IntArray): Long
-
-        @JvmStatic
-        private external fun nSetLottieBufferSize(
-            lottiePtr: Long,
-            bitmap: Bitmap?,
-            width: Float,
-            height: Float
-        )
-
-        @JvmStatic
-        private external fun nDrawLottieFrame(lottiePtr: Long, bitmap: Bitmap, frame: Int)
-
-        @JvmStatic
-        private external fun nDestroyLottie(lottiePtr: Long)
     }
 }

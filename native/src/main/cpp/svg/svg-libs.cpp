@@ -37,7 +37,7 @@ using namespace std;
  * Load SVG from file path.
  */
 extern "C" jlong
-Java_org_thorvg_svg_SvgDrawable_nLoadSvgFromPath(
+Java_org_thorvg_Svg_nLoadSvgFromPath(
         JNIEnv *env, jclass clazz, jstring path, jfloatArray outSize) {
 
     // Initialize ThorVG engine (2 threads)
@@ -99,7 +99,7 @@ Java_org_thorvg_svg_SvgDrawable_nLoadSvgFromPath(
  * Load SVG from string content.
  */
 extern "C" jlong
-Java_org_thorvg_svg_SvgDrawable_nLoadSvgFromString(
+Java_org_thorvg_Svg_nLoadSvgFromString(
         JNIEnv *env, jclass clazz, jstring content, jfloatArray outSize) {
 
     // Initialize ThorVG engine (2 threads)
@@ -170,7 +170,7 @@ Java_org_thorvg_svg_SvgDrawable_nLoadSvgFromString(
  * Set SVG rendering size.
  */
 extern "C" void
-Java_org_thorvg_svg_SvgDrawable_nSetSvgSize(
+Java_org_thorvg_Svg_nSetSvgSize(
         JNIEnv *env, jclass clazz, jlong svgPtr, jobject bitmap, jfloat width, jfloat height) {
 
     if (svgPtr == 0) {
@@ -194,7 +194,7 @@ Java_org_thorvg_svg_SvgDrawable_nSetSvgSize(
  * Draw SVG to bitmap.
  */
 extern "C" void
-Java_org_thorvg_svg_SvgDrawable_nDrawSvg(
+Java_org_thorvg_Svg_nDrawSvg(
         JNIEnv
         *env,
         jclass clazz, jlong
@@ -228,7 +228,7 @@ Java_org_thorvg_svg_SvgDrawable_nDrawSvg(
  * Destroy SVG and release resources.
  */
 extern "C" void
-Java_org_thorvg_svg_SvgDrawable_nDestroySvg(
+Java_org_thorvg_Svg_nDestroySvg(
         JNIEnv
         *env,
         jclass clazz, jlong
