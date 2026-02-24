@@ -194,31 +194,17 @@ Java_org_thorvg_jni_Svg_nSetSvgSize(
  * Draw SVG to bitmap.
  */
 extern "C" void
-Java_org_thorvg_jni_Svg_nDrawSvg(
-        JNIEnv
-        *env,
-        jclass clazz, jlong
-        svgPtr,
-        jobject bitmap
-) {
-
+Java_org_thorvg_jni_Svg_nDrawSvg(JNIEnv *env, jclass clazz, jlong svgPtr, jobject bitmap) {
     if (svgPtr == 0) {
         LOGE("Invalid SVG pointer");
         return;
     }
-
     auto *svgData = reinterpret_cast<SvgData *>(svgPtr);
     void *buffer;
 
-    if (
-            AndroidBitmap_lockPixels(env, bitmap, &buffer
-            ) >= 0) {
-        svgData->
-
-                draw();
-
-        AndroidBitmap_unlockPixels(env, bitmap
-        );
+    if (AndroidBitmap_lockPixels(env, bitmap, &buffer) >= 0) {
+        svgData->draw();
+        AndroidBitmap_unlockPixels(env, bitmap);
     } else {
         LOGE("Failed to lock bitmap pixels");
     }
@@ -228,23 +214,15 @@ Java_org_thorvg_jni_Svg_nDrawSvg(
  * Destroy SVG and release resources.
  */
 extern "C" void
-Java_org_thorvg_jni_Svg_nDestroySvg(
-        JNIEnv
-        *env,
-        jclass clazz, jlong
-        svgPtr) {
-
+Java_org_thorvg_jni_Svg_nDestroySvg(JNIEnv *env, jclass clazz, jlong svgPtr) {
     if (svgPtr == 0) {
         LOGE("Invalid SVG pointer");
         return;
     }
 
     auto *svgData = reinterpret_cast<SvgData *>(svgPtr);
-    delete
-            svgData;
-
-// Terminate ThorVG engine
+    delete svgData;
+    // Terminate ThorVG engine
     tvg::Initializer::term(tvg::CanvasEngine::Sw);
-
     LOGD("SVG destroyed and ThorVG terminated");
 }
