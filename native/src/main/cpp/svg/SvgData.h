@@ -40,7 +40,11 @@ public:
     uint32_t height = 0;
 
     SvgData() = default;
-    ~SvgData() = default;
+    ~SvgData() {
+        // canvas 会自动清理它管理的 picture（通过 push 转移的所有权）
+        // picture 的 unique_ptr 在 push 后已经 release()，不会 double free
+        canvas.reset();
+    }
 
     /**
      * Sets the render buffer and size.

@@ -53,8 +53,9 @@ void SvgData::setBufferSize(uint32_t* buf, float w, float h) {
             LOGE("Failed to resize picture");
         }
 
-        // Push picture to canvas (returns raw pointer that canvas manages)
-        if (canvas->push(tvg::cast(picture.get())) != tvg::Result::Success) {
+        // Push picture to canvas
+        // 注意：canvas->push() 会接管 picture 的所有权，所以需要释放 unique_ptr
+        if (canvas->push(tvg::cast(picture.release())) != tvg::Result::Success) {
             LOGE("Failed to push picture to canvas");
         }
     }
