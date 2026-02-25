@@ -9,7 +9,9 @@
   <img width="800" height="auto" src="https://github.com/thorvg/thorvg.site/blob/main/readme/logo/512/thorvg-banner.png">
 </p>
 
-ThorVG Android brings high-performance vector graphics rendering to Android using the ThorVG engine.
+ThorVG Android brings high-performance vector graphics rendering to Android using the ThorVG engine.Here is the render:
+
+<img width="200" height="auto" src="example.jpg">
 
 **Features**:
 - ✅ **SVG Rendering** - Static SVG 1.1/2.0 rendering
