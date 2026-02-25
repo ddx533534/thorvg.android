@@ -56,6 +56,13 @@ class SvgDrawable private constructor() : Drawable() {
     private var intrinsicHeight: Int = 0
     private var isDirty = true
 
+    // Paint with anti-aliasing and filtering for smooth scaling
+    private val paint = android.graphics.Paint().apply {
+        isAntiAlias = true      // 抗锯齿，边缘平滑
+        isFilterBitmap = true   // 双线性过滤，缩放优化
+        isDither = true         // 抖动算法，颜色渐变优化
+    }
+
     companion object {
         private const val TAG = "SvgDrawable"
 
@@ -178,10 +185,11 @@ class SvgDrawable private constructor() : Drawable() {
             }
         }
         Log.d(TAG, "绘制耗时: ${System.currentTimeMillis() - cur_time}")
-        // Draw bitmap to canvas (ImageView will handle scaling via scaleType)
+        // Draw bitmap to canvas with anti-aliasing
+        // Use paint with filtering for smooth scaling
         bitmap?.let {
             val bounds = bounds
-            canvas.drawBitmap(it, null, bounds, null)
+            canvas.drawBitmap(it, null, bounds, paint)
         }
     }
 
