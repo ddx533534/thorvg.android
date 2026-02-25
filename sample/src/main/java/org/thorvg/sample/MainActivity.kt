@@ -23,33 +23,62 @@
 package org.thorvg.sample
 
 import android.app.Activity
-import android.content.Intent
 import android.os.Bundle
-import android.view.View
+import android.widget.LinearLayout
 import android.widget.TextView
-import org.thorvg.lottie.LottieAnimationView
+import org.thorvg.svg.SvgImageView
 
 class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        updateLayout();
+    }
 
-        val lottieView = findViewById<LottieAnimationView>(R.id.lottie_view)
+    fun updateLayout() {
+        val layout = findViewById<LinearLayout>(R.id.content_view);
+        // Example 1: Load from raw resource
+        layout.addView(TextView(this).apply {
+            text = "1. SVG from Raw Resource:"
+            textSize = 18f
+            setPadding(0, 16, 0, 16)
+        })
 
-        findViewById<View>(R.id.anim_state).setOnClickListener { v: View ->
-            val button = v as TextView
-            if ("Pause".contentEquals(button.text)) {
-                lottieView.pauseAnimation()
-                button.text = "Resume"
-            } else {
-                lottieView.resumeAnimation()
-                button.text = "Pause"
-            }
-        }
+        layout.addView(SvgImageView(this).apply {
+            setSvgResource(R.raw.sample_icon)
+            layoutParams = LinearLayout.LayoutParams(600, 600)
+        })
 
-        // Add button to open SVG sample activity
-        findViewById<View>(R.id.svg_sample_button)?.setOnClickListener {
-            startActivity(Intent(this, SvgActivity::class.java))
-        }
+        // Example 2: Load from string
+        layout.addView(TextView(this).apply {
+            text = "2. SVG from String:"
+            textSize = 18f
+            setPadding(0, 32, 0, 16)
+        })
+
+        val svgString = """
+            <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+              <rect x="10" y="10" width="180" height="180" rx="20" fill="#2196F3"/>
+              <circle cx="100" cy="100" r="50" fill="#FFF"/>
+              <text x="100" y="110" font-family="Arial" font-size="30" fill="#2196F3" text-anchor="middle">SVG</text>
+            </svg>
+        """.trimIndent()
+
+        layout.addView(SvgImageView(this).apply {
+            setSvgString(svgString)
+            layoutParams = LinearLayout.LayoutParams(300, 300)
+        })
+
+        // Example 3: Another inline SVG
+        layout.addView(TextView(this).apply {
+            text = "3. Big SVG:"
+            textSize = 18f
+            setPadding(0, 32, 0, 16)
+        })
+
+        layout.addView(SvgImageView(this).apply {
+            setSvgResource(R.raw.sample_big)
+            layoutParams = LinearLayout.LayoutParams(600, 600)
+        })
     }
 }
