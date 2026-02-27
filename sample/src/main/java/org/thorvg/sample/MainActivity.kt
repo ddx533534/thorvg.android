@@ -45,10 +45,13 @@ class MainActivity : Activity() {
         })
 
         layout.addView(SvgImageView(this).apply {
-            setSvgResource(R.raw.sample_icon)
+            setSvgResource(R.raw.sample_view)
+            layoutParams = LinearLayout.LayoutParams(1000, 1000)
+        })
+        layout.addView(SvgImageView(this).apply {
+            setSvgResource(R.raw.sample_dna)
             layoutParams = LinearLayout.LayoutParams(600, 600)
         })
-
         // Example 2: Load from string
         layout.addView(TextView(this).apply {
             text = "2. SVG from String:"

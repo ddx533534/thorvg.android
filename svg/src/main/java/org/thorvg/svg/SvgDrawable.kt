@@ -125,8 +125,9 @@ class SvgDrawable private constructor() : Drawable() {
         fun fromString(svgContent: String): SvgDrawable? {
             val drawable = SvgDrawable()
             val outSize = FloatArray(2)
+            val curTime = System.currentTimeMillis()
             drawable.nativePtr = nLoadSvgFromString(svgContent, outSize)
-
+            Log.d(TAG, "解析耗时: " + (System.currentTimeMillis() - curTime))
             if (drawable.nativePtr == 0L) {
                 Log.e(TAG, "Failed to load SVG from string")
                 return null
@@ -158,6 +159,7 @@ class SvgDrawable private constructor() : Drawable() {
 
         // Create or recreate bitmap using SVG's intrinsic size
         val currentBitmap = bitmap
+        var cur_time = System.currentTimeMillis();
         if (currentBitmap == null ||
             currentBitmap.width != intrinsicWidth ||
             currentBitmap.height != intrinsicHeight
@@ -177,7 +179,6 @@ class SvgDrawable private constructor() : Drawable() {
         }
 
         // Render if dirty
-        var cur_time = System.currentTimeMillis();
         if (isDirty) {
             bitmap?.let {
                 nDrawSvg(nativePtr, it)

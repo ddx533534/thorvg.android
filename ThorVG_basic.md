@@ -587,6 +587,313 @@ renderer->draw();  // 自动路由到 SwRenderer::draw() 或 GlRenderer::draw()
 
 ---
 
+## Android OpenGL ES 渲染支持
+
+### ✅ Android 完全支持 GPU 加速渲染
+
+Android 原生支持 **OpenGL ES**（OpenGL for Embedded Systems），这是专门为移动设备优化的 OpenGL 版本。ThorVG 提供了 `GlCanvas` 来利用 GPU 加速。
+
+### 当前项目状态
+
+#### 🔴 目前只使用了 CPU 软件渲染（SwCanvas）
+
+从 `build_libthorvg.sh` 可以看到：
+
+```bash
+meson setup build -Dloaders="svg" --strip --optimization=2 --buildtype=release \
+  --cross-file /tmp/android_cross.txt -Ddefault_library=static
+```
+
+**问题**：没有指定 `-Dengines=gl`，所以默认只编译了 `sw`（软件渲染）引擎。
+
+---
+
+## 如何启用 GL 渲染？
+
+### 方案对比
+
+| 方案 | 渲染器 | 性能 | 内存占用 | 兼容性 | 实现难度 |
+|------|--------|------|---------|--------|---------|
+| **GlCanvas + GLSurfaceView** | GPU | ⭐⭐⭐⭐⭐ | 低 | OpenGL ES 3.0+ | 高 |
+| **SwCanvas + SIMD** | CPU (优化) | ⭐⭐⭐ | 中 | 100% | 低 |
+| **SwCanvas (当前)** | CPU | ⭐⭐ | 中 | 100% | 已完成 |
+
+### 1️⃣ 方案 A：启用 GlCanvas（真正的 GPU 加速）
+
+这是**真正的 GPU 加速方案**，完全跳过 Bitmap，直接渲染到屏幕。
+
+#### 优点：
+- ✅ 真正的 GPU 加速，性能最佳
+- ✅ 大尺寸 SVG 也流畅
+- ✅ 节省内存（不需要 Bitmap 缓冲区）
+
+#### 缺点：
+- ❌ 需要重构架构，不能用 `Drawable`
+- ❌ 需要使用 `GLSurfaceView` 或 `TextureView`
+- ❌ 需要管理 OpenGL 上下文生命周期
+
+#### 修改 ThorVG 编译配置
+
+更新 `build_libthorvg.sh`：
+
+```bash
+#!/bin/bash
+
+cd thorvg
+rm -rf build
+meson setup build \
+  -Dloaders="svg" \
+  -Dengines="sw,gl" \     # 👈 启用 GL 引擎
+  --strip \
+  --optimization=2 \
+  --buildtype=release \
+  --cross-file /tmp/android_cross.txt \
+  -Ddefault_library=static
+ninja -C build
+```
+
+**注意**：
+- `engines="sw,gl"`：同时编译 CPU 和 GPU 渲染器（推荐）
+- `engines="gl"`：只编译 GPU 渲染器（不推荐，建议保留 sw 作为后备）
+- `engines="all"`：编译所有渲染器（sw + gl + wg_beta）
+
+#### 更新 CMakeLists.txt 链接 OpenGL ES
+
+在 `native/src/main/cpp/CMakeLists.txt` 中添加 OpenGL 库：
+
+```cmake
+target_link_libraries(thorvg-native
+    android
+    lib_thorvg
+    -ljnigraphics
+    -fopenmp
+    -static-openmp
+    -lGLESv3          # 👈 添加 OpenGL ES 3.0
+    # 或者 -lGLESv2  # OpenGL ES 2.0（兼容性更好）
+    -lEGL             # 👈 添加 EGL（OpenGL 的窗口系统接口）
+    log)
+```
+
+#### Kotlin 代码使用 GLSurfaceView
+
+```kotlin
+class SvgGLSurfaceView(context: Context) : GLSurfaceView(context) {
+
+    private var nativePtr: Long = 0
+
+    init {
+        setEGLContextClientVersion(3)  // 使用 OpenGL ES 3.0
+        setRenderer(object : Renderer {
+            override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
+                // 在 GL 线程中初始化
+                nativePtr = nInitGlCanvas()
+            }
+
+            override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
+                nSetGlTarget(nativePtr, 0, width, height)
+            }
+
+            override fun onDrawFrame(gl: GL10?) {
+                nDrawGl(nativePtr)  // ThorVG 直接渲染到屏幕
+            }
+        })
+    }
+}
+```
+
+#### Native 代码示例
+
+```cpp
+extern "C" JNIEXPORT jlong JNICALL
+Java_org_thorvg_svg_SvgGLSurfaceView_nInitGlCanvas(JNIEnv* env, jobject thiz) {
+    auto canvas = tvg::GlCanvas::gen();
+    if (!canvas) {
+        LOGE("Failed to create GlCanvas");
+        return 0;
+    }
+    return reinterpret_cast<jlong>(canvas.release());
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_org_thorvg_svg_SvgGLSurfaceView_nSetGlTarget(JNIEnv* env, jobject thiz,
+                                                    jlong ptr, jint id, jint width, jint height) {
+    auto canvas = reinterpret_cast<tvg::GlCanvas*>(ptr);
+    // id = 0 表示主屏幕，也可以绑定到 FBO
+    canvas->target(id, width, height);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_org_thorvg_svg_SvgGLSurfaceView_nDrawGl(JNIEnv* env, jobject thiz, jlong ptr) {
+    auto canvas = reinterpret_cast<tvg::GlCanvas*>(ptr);
+    canvas->draw();
+    canvas->sync();
+}
+```
+
+#### SwCanvas vs GlCanvas API 差异
+
+| API | SwCanvas | GlCanvas |
+|-----|----------|----------|
+| **创建** | `SwCanvas::gen()` | `GlCanvas::gen()` |
+| **设置目标** | `target(buffer, stride, w, h, colorspace)` | `target(fbo_id, w, h)` |
+| **颜色空间** | 支持多种（ABGR8888, ARGB8888 等） | 目前仅支持 GL_RGBA8 |
+| **输出位置** | CPU 内存（Bitmap） | GPU 帧缓冲区（屏幕或 FBO） |
+| **上下文要求** | 无 | 需要有效的 EGL Context |
+
+---
+
+### 2️⃣ 方案 B：优化 SwCanvas（无需重构）
+
+保持当前架构，但启用 CPU 优化（SIMD）。
+
+#### 优点：
+- ✅ 无需重构代码
+- ✅ 兼容性好（所有设备都支持）
+- ✅ 可以用在 Drawable、ImageView 等任何场景
+
+#### 缺点：
+- ❌ 性能不如 GPU 渲染
+- ❌ 大尺寸 SVG 仍然较慢
+
+#### 启用 SIMD（CPU 向量化指令）
+
+更新 `build_libthorvg.sh`：
+
+```bash
+#!/bin/bash
+
+cd thorvg
+rm -rf build
+meson setup build \
+  -Dloaders="svg" \
+  -Dengines="sw" \
+  -Dsimd=true \         # 👈 启用 NEON（ARM）或 AVX（x86）
+  -Dthreads=true \      # 👈 启用多线程
+  --strip \
+  --optimization=3 \    # 👈 最高优化等级
+  --buildtype=release \
+  --cross-file /tmp/android_cross.txt \
+  -Ddefault_library=static
+ninja -C build
+```
+
+#### SIMD 加速原理
+
+在 `tvgSwRaster.cpp:1512-1521` 中：
+
+```cpp
+void rasterPixel32(uint32_t *dst, uint32_t val, uint32_t offset, int32_t len)
+{
+#if defined(THORVG_AVX_VECTOR_SUPPORT)
+    avxRasterPixel32(dst, val, offset, len);  // Intel AVX (x86_64)
+#elif defined(THORVG_NEON_VECTOR_SUPPORT)
+    neonRasterPixel32(dst, val, offset, len); // ARM NEON (ARM64)
+#else
+    cRasterPixels(dst, val, offset, len);     // 纯 C 实现（慢）
+#endif
+}
+```
+
+**SIMD 性能提升**：
+- ARM NEON：一次处理 4 个像素（128-bit 寄存器）
+- Intel AVX2：一次处理 8 个像素（256-bit 寄存器）
+- 理论加速比：2x - 4x
+
+---
+
+### 3️⃣ 推荐实施路线
+
+#### 阶段 1：立即优化（低成本，高收益）
+启用 SIMD 和多线程，提升 CPU 渲染性能：
+```bash
+-Dsimd=true -Dthreads=true --optimization=3
+```
+
+**预期效果**：
+- 性能提升 2-3 倍
+- 代码改动：0 行
+- 兼容性：100%
+
+#### 阶段 2：评估需求
+- 如果当前性能够用 → 保持 SwCanvas
+- 如果需要极致性能（大尺寸、高帧率动画）→ 考虑 GlCanvas
+
+#### 阶段 3：GPU 渲染（可选）
+创建新的 `SvgGLView` 组件使用 GlCanvas，与现有 `SvgDrawable` 并存：
+- `SvgDrawable`（SwCanvas）：用于静态图标、小尺寸 SVG
+- `SvgGLView`（GlCanvas）：用于动画、大尺寸、高性能场景
+
+---
+
+### GlCanvas 的使用限制
+
+#### ⚠️ 需要 OpenGL 上下文
+
+GlCanvas 必须在有效的 OpenGL 上下文中使用：
+
+```kotlin
+// ✅ 正确：在 GLSurfaceView 中使用
+class SvgGLView : GLSurfaceView {
+    override fun onSurfaceCreated(...) {
+        canvas = GlCanvas.gen()  // ✅ 在 GL 线程中创建
+    }
+}
+
+// ❌ 错误：在普通 View 中使用
+class SvgView : View {
+    init {
+        canvas = GlCanvas.gen()  // ❌ 没有 GL 上下文，会失败
+    }
+}
+```
+
+#### 🔧 GlCanvas 不能用于 Drawable
+
+因为 Android 的 `Drawable` 系统不提供 OpenGL 上下文，所以：
+- ✅ SwCanvas + Bitmap → 可以用在 Drawable
+- ❌ GlCanvas → 只能用在 GLSurfaceView/TextureView
+
+---
+
+### ThorVG 渲染引擎配置选项
+
+根据 `thorvg/meson_options.txt`：
+
+```meson
+option('engines',
+   type: 'array',
+   choices: ['sw', 'gl', 'wg_beta', 'all'],
+   value: ['sw'],
+   description: 'Enable Rasterizer Engine in thorvg')
+```
+
+#### 可选值：
+- `sw`：软件渲染（CPU）
+- `gl`：OpenGL ES 渲染（GPU）
+- `wg_beta`：WebGPU 渲染（实验性）
+- `all`：所有引擎
+
+#### 检查当前编译的引擎
+
+```bash
+cd thorvg
+meson configure build | grep engines
+# 输出：engines  [sw]  [sw, gl, wg_beta, all]
+```
+
+---
+
+## 总结
+
+**Android 完全支持 OpenGL ES 渲染**，ThorVG 的 `GlCanvas` 可以利用 GPU 加速。但对于本项目：
+
+1. ✅ **可以启用 GL 渲染** - ThorVG 原生支持
+2. ⚠️ **需要架构改动** - GlCanvas 需要 GLSurfaceView，不能直接用在 Drawable 中
+3. 🎯 **推荐先优化 SwCanvas** - 启用 SIMD + 多线程，性能提升明显且改动小
+4. 🚀 **GPU 渲染作为可选** - 为特定高性能场景创建独立的 GlCanvas 组件
+
+---
+
 ## 相关文件索引
 
 ### 核心架构文件
