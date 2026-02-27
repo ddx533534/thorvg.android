@@ -13,6 +13,14 @@ if (${ANDROID_ABI} STREQUAL "arm64-v8a" OR ${ANDROID_ABI} STREQUAL "x86_64")
 
     # Build unified shared library containing both SVG and Lottie support
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++14")
+    # Release optimizations
+    # Size optimization (-Os) or speed optimization (-O3)
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Os -DNDEBUG")
+    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Os -DNDEBUG")
+
+    # Function and data sections for dead code elimination
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffunction-sections -fdata-sections")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffunction-sections -fdata-sections")
 
     add_library(thorvg-native SHARED
             # Lottie source files
@@ -34,4 +42,12 @@ if (${ANDROID_ABI} STREQUAL "arm64-v8a" OR ${ANDROID_ABI} STREQUAL "x86_64")
             -fopenmp
             -static-openmp
             log)
+
+    # Link-time optimizations
+    target_link_options(thorvg-native PRIVATE
+            -Wl,--gc-sections           # Remove unused sections
+            -Wl,--strip-all             # Strip all symbols
+            -Wl,--no-undefined          # Catch linking errors early
+            -Wl,-O3                     # Linker optimization level
+    )
 endif ()
